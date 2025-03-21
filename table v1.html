@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Adventure | Multiplication Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #83a4d4, #b6fbff);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .score-board {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 48px;
+            color: #e74c3c;
+            margin: 30px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-btn {
+            padding: 20px;
+            font-size: 24px;
+            border: none;
+            border-radius: 15px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .correct {
+            background: #2ecc71 !important;
+            animation: celebrate 0.5s ease;
+        }
+
+        .wrong {
+            background: #e74c3c !important;
+            animation: shake 0.5s ease;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .progress {
+            height: 100%;
+            background: #2ecc71;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(10px); }
+            50% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: confetti-fall 1s linear;
+        }
+
+        .ad-area {
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #000000;
+            margin-top: auto;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="score-board">Score: <span id="score">0</span></div>
+        <div class="progress-bar">
+            <div class="progress" style="width: 0%"></div>
+        </div>
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div id="message"></div>
+    </div>
+
+    <div class="ad-area">
+        Ad Space (320×100)<br>
+        [Sample Ad Placement]
+    </div>
+
+    <script>
+        let score = 0;
+        let currentTable = 2;
+        let totalQuestions = 0;
+
+        function generateQuestion() {
+            totalQuestions++;
+            const num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+            currentTable = Math.floor(Math.random() * 19) + 2; // Tables from 2-20
+            const correctAnswer = currentTable * num1;
+            
+            // Generate wrong answers
+            const answers = new Set([correctAnswer]);
+            while (answers.size < 4) {
+                const variation = Math.floor(Math.random() * 5) + 1;
+                const wrongAnswer = correctAnswer + (Math.random() < 0.5 ? variation : -variation);
+                if (wrongAnswer > 0) answers.add(wrongAnswer);
+            }
+
+            // Shuffle answers
+            const answerArray = Array.from(answers).sort(() => Math.random() - 0.5);
+
+            // Update DOM
+            document.getElementById('question').textContent = `${currentTable} × ${num1} = ?`;
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            answerArray.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = answer;
+                button.onclick = () => checkAnswer(answer === correctAnswer, button);
+                optionsContainer.appendChild(button);
+            });
+
+            // Update progress bar
+            document.querySelector('.progress').style.width = `${(totalQuestions % 10) * 10}%`;
+        }
+
+        function checkAnswer(isCorrect, button) {
+            const options = document.querySelectorAll('.option-btn');
+            
+            if (isCorrect) {
+                score++;
+                document.getElementById('score').textContent = score;
+                button.classList.add('correct');
+                
+                // Add confetti effect
+                for (let i = 0; i < 20; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = `${Math.random() * 100}%`;
+                    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                    document.querySelector('.container').appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 1000);
+                }
+            } else {
+                button.classList.add('wrong');
+                options.forEach(opt => {
+                    if (opt.textContent == currentTable * parseInt(document.getElementById('question').textContent.split('×')[1].trim())) {
+                        opt.classList.add('correct');
+                    }
+                });
+                
+                // Vibrate on wrong answer
+                try {
+                    navigator.vibrate(200);
+                } catch (e) {
+                    // Vibration not supported
+                }
+            }
+
+            // Disable buttons after selection
+            options.forEach(opt => opt.disabled = true);
+
+            // Next question after delay
+            setTimeout(() => {
+                options.forEach(opt => {
+                    opt.classList.remove('correct', 'wrong');
+                    opt.disabled = false;
+                });
+                generateQuestion();
+            }, 1500);
+        }
+
+        // Start the game
+        generateQuestion();
+    </script>
+
+</body></html>
